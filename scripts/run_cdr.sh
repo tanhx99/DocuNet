@@ -1,20 +1,19 @@
 #! /bin/bash
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
-if true; then
+
 type=context-based
 bs=4
 bl=3e-5
-uls=(4e-4)
+ul=4e-4
 accum=1
-for ul in ${uls[@]}
-do
+
 python -u  ./train_bio.py --data_dir ./dataset/cdr \
   --max_height 35 \
   --channel_type $type \
   --bert_lr $bl \
   --transformer_type bert \
-  --model_name_or_path allenai/scibert_scivocab_cased \
+  --model_name_or_path ../../PLMs/scibert_scivocab_cased \
   --train_file train_filter.data \
   --dev_file dev_filter.data \
   --test_file test_filter.data \
@@ -30,6 +29,5 @@ python -u  ./train_bio.py --data_dir ./dataset/cdr \
   --num_class 2 \
   --save_path ./checkpoint/cdr/train_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}.pt \
   --log_dir ./logs/cdr/train_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}.log
-done
-fi
+
 

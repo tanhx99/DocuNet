@@ -69,5 +69,5 @@ def collate_fn(batch):
 
     labels = [f["labels"] for f in batch]
     hts = [f["hts"] for f in batch]
-    output = (input_ids, input_mask, labels, entity_pos, hts )
+    output = (input_ids, input_mask, labels, entity_pos, hts)
     return output

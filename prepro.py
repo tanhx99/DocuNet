@@ -1,11 +1,7 @@
-from fsspec import transaction
-from torch.utils import data
 from tqdm import tqdm
-#from transformers.models.auto.configuration_auto import F
 import ujson as json
 import os
 import pickle
-import random
 import numpy as np
 docred_rel2id = json.load(open('./meta/rel2id.json', 'r'))
 cdr_rel2id = {'1:NR:2': 0, '1:CID:2': 1}

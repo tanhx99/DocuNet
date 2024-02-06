@@ -9,8 +9,6 @@ from model_balanceloss import DocREModel
 from utils_sample import set_seed, collate_fn
 from prepro import read_cdr, read_gda
 import time
-from datetime import datetime
-
 
 
 def train(args, model, train_features, dev_features, test_features):
@@ -43,7 +41,6 @@ def train(args, model, train_features, dev_features, test_features):
                           'labels': batch[2],
                           'entity_pos': batch[3],
                           'hts': batch[4],
-                          
                           }
                 outputs = model(**inputs)
                 loss = outputs[0] / args.gradient_accumulation_steps
@@ -86,6 +83,7 @@ def train(args, model, train_features, dev_features, test_features):
                                 'best_f1': best_score
                             }, args.save_path)
 
+        logging('Finished. best_f1:{}'.format(best_score))
         return num_steps
 
     extract_layer = ["extractor", "bilinear"]
@@ -223,9 +221,9 @@ def main():
     train_file = os.path.join(args.data_dir, args.train_file)
     dev_file = os.path.join(args.data_dir, args.dev_file)
     test_file = os.path.join(args.data_dir, args.test_file)
-    train_features = read(train_file,'./train_cache', tokenizer, max_seq_length=args.max_seq_length)
-    dev_features = read(dev_file,'./dev_cache', tokenizer, max_seq_length=args.max_seq_length)
-    test_features = read(test_file,'./test_cache', tokenizer, max_seq_length=args.max_seq_length)
+    train_features = read(train_file, os.path.join(args.data_dir, 'train_cache'), tokenizer, max_seq_length=args.max_seq_length)
+    dev_features = read(dev_file,os.path.join(args.data_dir, 'dev_cache'), tokenizer, max_seq_length=args.max_seq_length)
+    test_features = read(test_file,os.path.join(args.data_dir, 'test_cache'), tokenizer, max_seq_length=args.max_seq_length)
 
     model = AutoModel.from_pretrained(
         args.model_name_or_path,
