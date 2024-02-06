@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoConfig, AutoModel, AutoTokenizer
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 from model_balanceloss import DocREModel
+# from model_balanceloss2 import DiffusionDocREModel as DocREModel
 from utils_sample import set_seed, collate_fn
 from prepro import read_cdr, read_gda
 import time
