@@ -6,6 +6,7 @@ bs=4
 bl=3e-5
 ul=3e-4
 accum=4
+epoch=30
 num_timesteps=1000
 sampling_timesteps=5
 
@@ -25,11 +26,11 @@ python -u  ./train_bio.py --data_dir ./dataset/gda \
   --learning_rate $ul \
   --max_grad_norm 1.0 \
   --warmup_ratio 0.06 \
-  --num_train_epochs 10 \
+  --num_train_epochs $epoch \
   --evaluation_steps 400 \
   --seed 66 \
   --num_class 2 \
   --num_timesteps $num_timesteps \
   --sampling_timesteps $sampling_timesteps \
-  --save_path ./checkpoint/gda/train_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}.pt \
-  --log_dir ./logs/gda/train_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}.log
+  --save_path ./checkpoint/gda/train_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.pt \
+  --log_dir ./logs/gda/train_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.log
