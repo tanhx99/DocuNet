@@ -1,11 +1,13 @@
 #! /bin/bash
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 type=context-based
 bs=4
 bl=3e-5
 ul=3e-4
 accum=4
+num_timesteps=1000
+sampling_timesteps=5
 
 python -u  ./train_bio.py --data_dir ./dataset/gda \
   --max_height 35 \
@@ -27,5 +29,7 @@ python -u  ./train_bio.py --data_dir ./dataset/gda \
   --evaluation_steps 400 \
   --seed 66 \
   --num_class 2 \
-  --save_path ./checkpoint/gda/train_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}.pt \
-  --log_dir ./logs/gda/train_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}.log
+  --num_timesteps $num_timesteps \
+  --sampling_timesteps $sampling_timesteps \
+  --save_path ./checkpoint/gda/train_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}.pt \
+  --log_dir ./logs/gda/train_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}.log

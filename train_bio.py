@@ -5,8 +5,8 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoConfig, AutoModel, AutoTokenizer
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
-from model_balanceloss import DocREModel
-# from model_balanceloss2 import DiffusionDocREModel as DocREModel
+# from model_balanceloss import DocREModel
+from model_balanceloss2 import DiffusionDocREModel as DocREModel
 from utils_sample import set_seed, collate_fn
 from prepro import read_cdr, read_gda
 import time
@@ -44,7 +44,7 @@ def train(args, model, train_features, dev_features, test_features):
                           'hts': batch[4],
                           }
                 outputs = model(**inputs)
-                loss = outputs[0] / args.gradient_accumulation_steps
+                loss = outputs["loss"] / args.gradient_accumulation_steps
                 loss.backward()
                 total_loss += loss.item()
                 if step % args.gradient_accumulation_steps == 0:
@@ -119,8 +119,7 @@ def evaluate(args, model, features, tag="dev"):
 
         with torch.no_grad():
             output = model(**inputs)
-            loss = output[0]
-            pred = output[1].cpu().numpy()
+            pred = output["pred"].cpu().numpy()
             pred[np.isnan(pred)] = 0
             preds.append(pred)
             golds.append(np.concatenate([np.array(label, np.float32) for label in batch[2]], axis=0))
@@ -200,6 +199,10 @@ def main():
     parser.add_argument("--bert_lr", default=5e-5, type=float,
                         help="The initial learning rate for Adam.")
     parser.add_argument("--max_height", type=int, default=42,
+                        help="log.")
+    parser.add_argument("--num_timesteps", type=int, default=1000,
+                        help="log.")
+    parser.add_argument("--sampling_timesteps", type=int, default=5,
                         help="log.")
     
     args = parser.parse_args()

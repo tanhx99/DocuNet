@@ -199,6 +199,7 @@ def read_cdr(file_in, save_file, tokenizer, max_seq_length=1024):
         pmids = set()
         features = []
         maxlen = 0
+        entity_num_max = 0
         with open(file_in, 'r') as infile:
             lines = infile.readlines()
             for i_l, line in enumerate(tqdm(lines)):
@@ -288,6 +289,7 @@ def read_cdr(file_in, save_file, tokenizer, max_seq_length=1024):
                         relations.append(relation)
                         hts.append([h, t])
 
+                    entity_num_max = max(len(ent2idx), entity_num_max)
                 maxlen = max(maxlen, len(sents))
                 sents = sents[:max_seq_length - 2]
                 input_ids = tokenizer.convert_tokens_to_ids(sents)
@@ -303,6 +305,7 @@ def read_cdr(file_in, save_file, tokenizer, max_seq_length=1024):
                     features.append(feature)
         print("Number of documents: {}.".format(len(features)))
         print("Max document length: {}.".format(maxlen))
+        print("Max entity num: {}".format(entity_num_max))
 
         with open(file=save_file, mode='wb') as fw:
             pickle.dump(features, fw)
@@ -322,6 +325,7 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
         pmids = set()
         features = []
         maxlen = 0
+        entity_num_max = 0
         with open(file_in, 'r') as infile:
             lines = infile.readlines()
             for i_l, line in enumerate(tqdm(lines)):
@@ -410,6 +414,7 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
                             relation[mention["relation"]] = 1
                         relations.append(relation)
                         hts.append([h, t])
+                    entity_num_max = max(len(ent2idx), entity_num_max)
 
                 maxlen = max(maxlen, len(sents))
                 sents = sents[:max_seq_length - 2]
@@ -426,6 +431,8 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
                     features.append(feature)
         print("Number of documents: {}.".format(len(features)))
         print("Max document length: {}.".format(maxlen))
+        print("Max entity num: {}".format(entity_num_max))
+
         with open(file=save_file, mode='wb') as fw:
             pickle.dump(features, fw)
         print('finish reading {} and save preprocessed data to {}.'.format(file_in, save_file))

@@ -194,11 +194,12 @@ class DocREModel(nn.Module):
         bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self.emb_size * self.block_size)
         logits = self.bilinear(bl)
 
-
-        output = (self.loss_fnt.get_label(logits, num_labels=self.num_labels))
+        output = dict()
+        pred = (self.loss_fnt.get_label(logits, num_labels=self.num_labels))
+        output["pred"] = pred
         if labels is not None:
             labels = [torch.tensor(label) for label in labels]
             labels = torch.cat(labels, dim=0).to(logits)
             loss = self.loss_fnt(logits.float(), labels.float())
-            output = (loss.to(sequence_output), output)
+            output["loss"] = loss.to(sequence_output)
         return output
