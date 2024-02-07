@@ -159,8 +159,8 @@ class DiffusionDocREModel(nn.Module):
 
             x0 = torch.zeros((self.min_height, self.min_height)).to(sequence_output.device)
             
-            for (h, t) in hts[i]:
-                x0[h, t] = 1
+            for (head, tail) in hts[i]:
+                x0[head, tail] = 1
             x0[(entity_num+1):] = x0[entity_num]
 
             hss.append(hs)
@@ -276,8 +276,8 @@ class DiffusionDocREModel(nn.Module):
             p = pred[last_i: last_i+length, 1]
             last_i += length
             for j in range(length):
-                h, t = hts[i][j]
-                x0[i][h][t] = p[j]
+                head, tail = hts[i][j]
+                x0[i][head][tail] = p[j]
             entity_num = entity_nums[i]
             x0[i, entity_num:] = x0[i][entity_num-1]
 
