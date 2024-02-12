@@ -1,5 +1,5 @@
 #! /bin/bash
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 
 type=context-based
@@ -7,7 +7,7 @@ bs=4
 bl=3e-5
 ul=4e-4
 accum=1
-epoch=50
+epoch=30
 num_timesteps=500
 sampling_timesteps=5
 
@@ -32,7 +32,7 @@ python -u  ./train_bio.py --data_dir ./dataset/cdr \
   --num_class 2 \
   --num_timesteps $num_timesteps \
   --sampling_timesteps $sampling_timesteps \
-  --save_path ./checkpoint/cdr/train_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.pt \
-  --log_dir ./logs/cdr/train_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.log
+  --save_path ./checkpoint/cdr/train2_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.pt \
+  --log_dir ./logs/cdr/train2_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.log
 
 

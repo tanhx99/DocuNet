@@ -1,11 +1,10 @@
 import torch
 import torch.nn as nn
-import math
 from opt_einsum import contract
 from long_seq import process_long_input
 from losses import balanced_loss as ATLoss
 import torch.nn.functional as F
-from attn_unet import AttentionUNet
+from attn_unet3 import AttentionUNet
 
 
 def extract(a, t, x_shape):

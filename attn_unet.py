@@ -58,12 +58,12 @@ class AttentionUNet(torch.nn.Module):
         """
         # attention_channels as the shape of: batch_size x channel x width x height
         x = attention_channels  # [bs, 3, min_height, min_height]
-        x1 = self.inc(x)        # [bs, 256, min_height, min_height]
+        x1 = self.inc(x, timesteps)        # [bs, 256, min_height, min_height]
         x2 = self.down1(x1, timesteps)     # [bs, 512, min_height//2, min_height//2]
         x3 = self.down2(x2, timesteps)     # [bs, 512, min_height//4, min_height//4]
         x = self.up1(x3, x2, timesteps)    # [bs, 256, min_height//2, min_height//2]
         x = self.up2(x, x1, timesteps)     # [bs, 128, min_height, min_height]
-        output = self.outc(x)   # [bs, 256, min_height, min_height]
+        output = self.outc(x, timesteps)   # [bs, 256, min_height, min_height]
         # attn_map as the shape of: batch_size x width x height x class
         output = output.permute(0, 2, 3, 1).contiguous()
         return output
@@ -91,8 +91,19 @@ class InConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(InConv, self).__init__()
         self.conv = DoubleConv(in_ch, out_ch)
+        self.time_mlp = nn.Sequential(
+            SinusoidalPositionEmbeddings(256),
+            nn.Linear(256, 256),
+            nn.GELU(),
+            nn.Linear(256, in_ch),
+        )
+        
 
-    def forward(self, x):
+    def forward(self, x, timesteps=None):
+        if timesteps is not None:
+            temb = self.time_mlp(timesteps)
+            temb = temb.unsqueeze(-1).unsqueeze(-1)
+            x = x + temb
         x = self.conv(x)
         return x
 
@@ -112,7 +123,7 @@ class DownLayer(nn.Module):
             nn.Linear(in_ch, in_ch),
         )
 
-    def forward(self, x, timesteps):
+    def forward(self, x, timesteps=None):
         if timesteps is not None:
             temb = self.time_mlp(timesteps)
             temb = temb.unsqueeze(-1).unsqueeze(-1)
@@ -139,7 +150,7 @@ class UpLayer(nn.Module):
             nn.Linear(in_ch, in_ch),
         )
 
-    def forward(self, x1, x2, timesteps):
+    def forward(self, x1, x2, timesteps=None):
         x1 = self.up(x1)
         diffY = x2.size()[2] - x1.size()[2]
         diffX = x2.size()[3] - x1.size()[3]
@@ -161,7 +172,17 @@ class OutConv(nn.Module):
     def __init__(self, in_ch, out_ch):
         super(OutConv, self).__init__()
         self.conv = nn.Conv2d(in_ch, out_ch, 1)
+        self.time_mlp = nn.Sequential(
+            SinusoidalPositionEmbeddings(in_ch),
+            nn.Linear(in_ch, in_ch),
+            nn.GELU(),
+            nn.Linear(in_ch, in_ch),
+        )
 
-    def forward(self, x):
+    def forward(self, x, timesteps=None):
+        if timesteps is not None:
+            temb = self.time_mlp(timesteps)
+            temb = temb.unsqueeze(-1).unsqueeze(-1)
+            x = x + temb
         x = self.conv(x)
         return x
