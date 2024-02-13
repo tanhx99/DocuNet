@@ -6,7 +6,6 @@ from losses import balanced_loss as ATLoss
 import torch.nn.functional as F
 from attn_unet3 import AttentionUNet
 
-
 def extract(a, t, x_shape):
     """extract the appropriate  t  index for a batch of indices"""
     batch_size = t.shape[0]
@@ -248,7 +247,7 @@ class DiffusionDocREModel(nn.Module):
 
     def model_predictions(self, sequence_output, hts, xt, hs, ts, entity_as, entity_nums, timestep):
         xt = torch.clamp(xt, min=-1, max=1)
-        xt = (xt + 1) / 2
+        xt = (xt + 1.) / 2.
         xt = torch.clamp(xt, min=0, max=1)
 
         # xts = self.F(xt.unsqueeze(-1))

@@ -1,5 +1,5 @@
 #! /bin/bash
-export CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=1
 
 type=context-based
 bs=4
@@ -32,5 +32,5 @@ python -u  ./train_bio.py --data_dir ./dataset/gda \
   --num_class 2 \
   --num_timesteps $num_timesteps \
   --sampling_timesteps $sampling_timesteps \
-  --save_path ./checkpoint/gda/train2_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.pt \
-  --log_dir ./logs/gda/train2_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.log
+  --save_path ./checkpoint/gda/train3_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.pt \
+  --log_dir ./logs/gda/train3_diffusion_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.log

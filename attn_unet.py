@@ -137,8 +137,7 @@ class UpLayer(nn.Module):
     def __init__(self, in_ch, out_ch, bilinear=True):
         super(UpLayer, self).__init__()
         if bilinear:
-            self.up = nn.Upsample(scale_factor=2, mode='bilinear',
-                                  align_corners=True)
+            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         else:
             self.up = nn.ConvTranspose2d(in_ch // 2, in_ch // 2, 2, stride=2)
         self.conv = DoubleConv(in_ch, out_ch)

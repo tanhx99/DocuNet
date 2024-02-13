@@ -132,8 +132,7 @@ class UpLayer(nn.Module):
     def __init__(self, in_ch, out_ch, bilinear=True):
         super(UpLayer, self).__init__()
         if bilinear:
-            self.up = nn.Upsample(scale_factor=2, mode='bilinear',
-                                  align_corners=True)
+            self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         else:
             self.up = nn.ConvTranspose2d(in_ch // 2, in_ch // 2, 2, stride=2)
         self.conv = DoubleConv(in_ch, out_ch)
@@ -143,8 +142,7 @@ class UpLayer(nn.Module):
         x1 = self.up(x1)
         diffY = x2.size()[2] - x1.size()[2]
         diffX = x2.size()[3] - x1.size()[3]
-        x1 = F.pad(x1, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY -
-                        diffY // 2))
+        x1 = F.pad(x1, (diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2))
         x = torch.cat([x2, x1], dim=1)
 
         x = self.conv(x, temb)

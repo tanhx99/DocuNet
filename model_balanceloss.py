@@ -6,7 +6,9 @@ from losses import balanced_loss as ATLoss
 import torch.nn.functional as F
 from allennlp.modules.matrix_attention import DotProductMatrixAttention, CosineMatrixAttention, BilinearMatrixAttention
 from element_wise import ElementWiseMatrixAttention
-from attn_unet import AttentionUNet
+# from attn_unet import AttentionUNet
+from NestUNet import NestedUNet
+
 
 class DocREModel(nn.Module):
     def __init__(self, config, args, model, emb_size=768, block_size=64, num_labels=-1):
@@ -32,10 +34,10 @@ class DocREModel(nn.Module):
         self.linear = nn.Linear(config.hidden_size, args.unet_in_dim)
         self.min_height = args.max_height
         self.channel_type = args.channel_type
-        self.segmentation_net = AttentionUNet(input_channels=args.unet_in_dim,
-                                              class_number=args.unet_out_dim,
-                                              down_channel=args.down_dim)
-
+        # self.segmentation_net = AttentionUNet(input_channels=args.unet_in_dim,
+        #                                       class_number=args.unet_out_dim,
+        #                                       down_channel=args.down_dim)
+        self.segmentation_net = NestedUNet(256)
 
     def encode(self, input_ids, attention_mask,entity_pos):
         config = self.config
