@@ -121,7 +121,7 @@ class DiffusionDocREModel(nn.Module):
             for entity_num, e in enumerate(entity_pos[i]):
                 if len(e) > 1:
                     e_emb, e_att = [], []
-                    for start, end in e:
+                    for start, end, sent_id in e:
                         if start + offset < c:
                             # In case the entity mention is truncated due to limited max seq length.
                             e_emb.append(sequence_output[i, start + offset])
@@ -133,7 +133,7 @@ class DiffusionDocREModel(nn.Module):
                         e_emb = torch.zeros(self.config.hidden_size).to(sequence_output)
                         e_att = torch.zeros(h, c).to(attention)
                 else:
-                    start, end = e[0]
+                    start, end, sent_id = e[0]
                     if start + offset < c:
                         e_emb = sequence_output[i, start + offset]
                         e_att = attention[i, :, start + offset]

@@ -3,10 +3,10 @@ import ujson as json
 import os
 import pickle
 import numpy as np
-docred_rel2id = json.load(open('./meta/rel2id.json', 'r'))
+# docred_rel2id = json.load(open('./meta/rel2id.json', 'r'))
 cdr_rel2id = {'1:NR:2': 0, '1:CID:2': 1}
 gda_rel2id = {'1:NR:2': 0, '1:GDA:2': 1}
-
+docred_rel2id = gda_rel2id
 
 def chunks(l, n):
     res = []
@@ -37,7 +37,7 @@ class ReadDataset:
 
 
 
-def read_docred(transfermers, file_in, save_file, tokenizer, max_seq_length=1024):
+def read_docred(file_in, save_file, tokenizer, max_seq_length=1024):
     if os.path.exists(save_file):
         with open(file=save_file, mode='rb') as fr:
             features = pickle.load(fr)
@@ -55,9 +55,9 @@ def read_docred(transfermers, file_in, save_file, tokenizer, max_seq_length=1024
             return None
         with open(file_in, "r") as fh:
             data = json.load(fh)
-        if transfermers == 'bert':
-            # entity_type = ["ORG", "-",  "LOC", "-",  "TIME", "-",  "PER", "-", "MISC", "-", "NUM"]
-            entity_type = ["-", "ORG", "-",  "LOC", "-",  "TIME", "-",  "PER", "-", "MISC", "-", "NUM"]
+        # if transfermers == 'bert':
+        #     # entity_type = ["ORG", "-",  "LOC", "-",  "TIME", "-",  "PER", "-", "MISC", "-", "NUM"]
+        #     entity_type = ["-", "ORG", "-",  "LOC", "-",  "TIME", "-",  "PER", "-", "MISC", "-", "NUM"]
 
 
         for sample in tqdm(data, desc="Example"):
@@ -80,24 +80,24 @@ def read_docred(transfermers, file_in, save_file, tokenizer, max_seq_length=1024
                 for i_t, token in enumerate(sent):
                     tokens_wordpiece = tokenizer.tokenize(token)
                     if (i_s, i_t) in entity_start:
-                        t = entity_start.index((i_s, i_t))
-                        if transfermers == 'bert':
-                            mention_type = mention_types[t]
-                            special_token_i = entity_type.index(mention_type)
-                            special_token = ['[unused' + str(special_token_i) + ']']
-                        else:
-                            special_token = ['*']
+                        # t = entity_start.index((i_s, i_t))
+                        # if transfermers == 'bert':
+                        #     mention_type = mention_types[t]
+                        #     special_token_i = entity_type.index(mention_type)
+                        #     special_token = ['[unused' + str(special_token_i) + ']']
+                        # else:
+                        special_token = ['*']
                         tokens_wordpiece = special_token + tokens_wordpiece
                         # tokens_wordpiece = ["[unused0]"]+ tokens_wordpiece
 
                     if (i_s, i_t) in entity_end:
-                        t = entity_end.index((i_s, i_t))
-                        if transfermers == 'bert':
-                            mention_type = mention_types[t]
-                            special_token_i = entity_type.index(mention_type) + 50
-                            special_token = ['[unused' + str(special_token_i) + ']']
-                        else:
-                            special_token = ['*']
+                        # t = entity_end.index((i_s, i_t))
+                        # if transfermers == 'bert':
+                        #     mention_type = mention_types[t]
+                        #     special_token_i = entity_type.index(mention_type) + 50
+                        #     special_token = ['[unused' + str(special_token_i) + ']']
+                        # else:
+                        special_token = ['*']
                         tokens_wordpiece = tokens_wordpiece + special_token
 
                         # tokens_wordpiece = tokens_wordpiece + ["[unused1]"]
@@ -138,7 +138,7 @@ def read_docred(transfermers, file_in, save_file, tokenizer, max_seq_length=1024
             relations, hts = [], []
             # Get positive samples from dataset
             for h, t in train_triple.keys():
-                relation = [0] * len(docred_rel2id)
+                relation = [0] * (len(docred_rel2id)-1)
                 for mention in train_triple[h, t]:
                     relation[mention["relation"]] = 1
                     evidence = mention["evidence"]
@@ -146,16 +146,16 @@ def read_docred(transfermers, file_in, save_file, tokenizer, max_seq_length=1024
                 hts.append([h, t])
                 pos_samples += 1
 
-            # Get negative samples from dataset
-            for h in range(len(entities)):
-                for t in range(len(entities)):
-                    if h != t and [h, t] not in hts:
-                        relation = [1] + [0] * (len(docred_rel2id) - 1)
-                        relations.append(relation)
-                        hts.append([h, t])
-                        neg_samples += 1
+            # # Get negative samples from dataset
+            # for h in range(len(entities)):
+            #     for t in range(len(entities)):
+            #         if h != t and [h, t] not in hts:
+            #             relation = [1] + [0] * (len(docred_rel2id) - 1)
+            #             relations.append(relation)
+            #             hts.append([h, t])
+            #             neg_samples += 1
 
-            assert len(relations) == len(entities) * (len(entities) - 1)
+            # assert len(relations) == len(entities) * (len(entities) - 1)
 
             if len(hts)==0:
                 print(len(sent))
@@ -238,8 +238,10 @@ def read_cdr(file_in, save_file, tokenizer, max_seq_length=1024):
                             for start, end, tpy in list(entity_pos):
                                 if i_t == start:
                                     tokens_wordpiece = ["*"] + tokens_wordpiece
+                                    # tokens_wordpiece = ["[unused1]"] + tokens_wordpiece
                                 if i_t + 1 == end:
                                     tokens_wordpiece = tokens_wordpiece + ["*"]
+                                    # tokens_wordpiece = tokens_wordpiece + ["[unused2]"]
                             sent_map[i_t] = len(new_sents)
                             new_sents.extend(tokens_wordpiece)
                             i_t += 1
@@ -255,10 +257,12 @@ def read_cdr(file_in, save_file, tokenizer, max_seq_length=1024):
                             h_id, t_id = p[5], p[11]
                             h_start, t_start = p[8], p[14]
                             h_end, t_end = p[9], p[15]
+                            h_sent, t_sent = p[10], p[16]
                         else:
                             t_id, h_id = p[5], p[11]
                             t_start, h_start = p[8], p[14]
                             t_end, h_end = p[9], p[15]
+                            t_sent, h_sent = p[10], p[16]
                         h_start = map(int, h_start.split(':'))
                         h_end = map(int, h_end.split(':'))
                         t_start = map(int, t_start.split(':'))
@@ -267,12 +271,14 @@ def read_cdr(file_in, save_file, tokenizer, max_seq_length=1024):
                         h_end = [sent_map[idx] for idx in h_end]
                         t_start = [sent_map[idx] for idx in t_start]
                         t_end = [sent_map[idx] for idx in t_end]
+                        h_sent = map(int, h_sent.split(":"))
+                        t_sent = map(int, t_sent.split(":"))
                         if h_id not in ent2idx:
                             ent2idx[h_id] = len(ent2idx)
-                            entity_pos.append(list(zip(h_start, h_end)))
+                            entity_pos.append(list(zip(h_start, h_end, h_sent)))
                         if t_id not in ent2idx:
                             ent2idx[t_id] = len(ent2idx)
-                            entity_pos.append(list(zip(t_start, t_end)))
+                            entity_pos.append(list(zip(t_start, t_end, t_sent)))
                         h_id, t_id = ent2idx[h_id], ent2idx[t_id]
 
                         r = cdr_rel2id[p[0]]
@@ -381,10 +387,12 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
                             h_id, t_id = p[5], p[11]
                             h_start, t_start = p[8], p[14]
                             h_end, t_end = p[9], p[15]
+                            h_sent, t_sent = p[10], p[16]
                         else:
                             t_id, h_id = p[5], p[11]
                             t_start, h_start = p[8], p[14]
                             t_end, h_end = p[9], p[15]
+                            t_sent, h_sent = p[10], p[16]
                         h_start = map(int, h_start.split(':'))
                         h_end = map(int, h_end.split(':'))
                         t_start = map(int, t_start.split(':'))
@@ -393,12 +401,14 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
                         h_end = [sent_map[idx] for idx in h_end]
                         t_start = [sent_map[idx] for idx in t_start]
                         t_end = [sent_map[idx] for idx in t_end]
+                        h_sent = map(int, h_sent.split(":"))
+                        t_sent = map(int, t_sent.split(":"))
                         if h_id not in ent2idx:
                             ent2idx[h_id] = len(ent2idx)
-                            entity_pos.append(list(zip(h_start, h_end)))
+                            entity_pos.append(list(zip(h_start, h_end, h_sent)))
                         if t_id not in ent2idx:
                             ent2idx[t_id] = len(ent2idx)
-                            entity_pos.append(list(zip(t_start, t_end)))
+                            entity_pos.append(list(zip(t_start, t_end, t_sent)))
                         h_id, t_id = ent2idx[h_id], ent2idx[t_id]
 
                         r = gda_rel2id[p[0]]

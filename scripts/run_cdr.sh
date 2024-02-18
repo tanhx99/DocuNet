@@ -3,15 +3,14 @@ export CUDA_VISIBLE_DEVICES=0
 
 
 type=context-based
-bs=4
-bl=3e-5
-ul=4e-4
+bs=8
+bl=2e-5
+ul=1e-4
 accum=1
-epoch=30
-num_timesteps=500
-sampling_timesteps=5
+epoch=50
 
-python -u  ./train_bio.py --data_dir ./dataset/cdr \
+
+python -u  ./train_bio.py --data_dir ./dataset/cdr/original \
   --max_height 35 \
   --channel_type $type \
   --bert_lr $bl \
@@ -30,9 +29,7 @@ python -u  ./train_bio.py --data_dir ./dataset/cdr \
   --num_train_epochs $epoch \
   --seed 111 \
   --num_class 2 \
-  --num_timesteps $num_timesteps \
-  --sampling_timesteps $sampling_timesteps \
-  --save_path ./checkpoint/cdr/train3_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.pt \
-  --log_dir ./logs/cdr/train3_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_${num_timesteps}_${sampling_timesteps}_${epoch}.log
+  --save_path ./checkpoint/cdr/train_mine_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_epoch${epoch}.pt \
+  --log_dir ./logs/cdr/train_mine_scibert-lr${bl}_accum${accum}_unet-lr${ul}_bs${bs}_epoch${epoch}.log
 
 

@@ -6,9 +6,7 @@ from losses import balanced_loss as ATLoss
 import torch.nn.functional as F
 from allennlp.modules.matrix_attention import DotProductMatrixAttention, CosineMatrixAttention, BilinearMatrixAttention
 from element_wise import ElementWiseMatrixAttention
-# from attn_unet import AttentionUNet
-from NestUNet import NestedUNet
-
+from attn_unet import AttentionUNet
 
 class DocREModel(nn.Module):
     def __init__(self, config, args, model, emb_size=768, block_size=64, num_labels=-1):
@@ -31,13 +29,13 @@ class DocREModel(nn.Module):
         self.bertdrop = nn.Dropout(0.6)
         self.unet_in_dim = args.unet_in_dim
         self.unet_out_dim = args.unet_in_dim
-        self.linear = nn.Linear(config.hidden_size, args.unet_in_dim)
+        self.liner = nn.Linear(config.hidden_size, args.unet_in_dim)
         self.min_height = args.max_height
         self.channel_type = args.channel_type
-        # self.segmentation_net = AttentionUNet(input_channels=args.unet_in_dim,
-        #                                       class_number=args.unet_out_dim,
-        #                                       down_channel=args.down_dim)
-        self.segmentation_net = NestedUNet(256)
+        self.segmentation_net = AttentionUNet(input_channels=args.unet_in_dim,
+                                              class_number=args.unet_out_dim,
+                                              down_channel=args.down_dim)
+
 
     def encode(self, input_ids, attention_mask,entity_pos):
         config = self.config
@@ -63,7 +61,7 @@ class DocREModel(nn.Module):
             for entity_num, e in enumerate(entity_pos[i]):
                 if len(e) > 1:
                     e_emb, e_att = [], []
-                    for start, end in e:
+                    for start, end, _ in e:
                         if start + offset < c:
                             # In case the entity mention is truncated due to limited max seq length.
                             e_emb.append(sequence_output[i, start + offset])
@@ -75,7 +73,7 @@ class DocREModel(nn.Module):
                         e_emb = torch.zeros(self.config.hidden_size).to(sequence_output)
                         e_att = torch.zeros(h, c).to(attention)
                 else:
-                    start, end = e[0]
+                    start, end, _ = e[0]
                     if start + offset < c:
                         e_emb = sequence_output[i, start + offset]
                         e_att = attention[i, :, start + offset]
@@ -126,7 +124,7 @@ class DocREModel(nn.Module):
         # attention = attention.to('cpu')
         bs,_,d = sequence_output.size()
         # ne = max([len(x) for x in entity_as])  # 本次bs中的最大实体数
-        ne = self.min_height    # 这里应该是采用了固定值
+        ne = self.min_height
 
         index_pair = []
         for i in range(ne):
@@ -151,9 +149,10 @@ class DocREModel(nn.Module):
                 labels=None,
                 entity_pos=None,
                 hts=None,
+                instance_mask=None,
                 ):
 
-        sequence_output, attention = self.encode(input_ids, attention_mask, entity_pos)
+        sequence_output, attention = self.encode(input_ids, attention_mask,entity_pos)
 
         bs, sequen_len, d = sequence_output.shape
         run_device = sequence_output.device.index
@@ -166,8 +165,9 @@ class DocREModel(nn.Module):
 
         # 获得通道map的两种不同方法
         if self.channel_type == 'context-based':
-            feature_map = self.get_channel_map(sequence_output, entity_as)  # [b, min_height, min_height, d]
-            attn_input = self.linear(feature_map).permute(0, 3, 1, 2).contiguous()  # [b, 3, min_height, min_height] 3个通道
+            feature_map = self.get_channel_map(sequence_output, entity_as)
+            ##print('feature_map:', feature_map.shape)
+            attn_input = self.liner(feature_map).permute(0, 3, 1, 2).contiguous()
 
         elif self.channel_type == 'similarity-based':
             ent_encode = sequence_output.new_zeros(bs, self.min_height, d)
@@ -183,9 +183,9 @@ class DocREModel(nn.Module):
         else:
             raise Exception("channel_type must be specify correctly")
 
-        
+
         attn_map = self.segmentation_net(attn_input)
-        h_t = self.get_ht(attn_map, hts)
+        h_t = self.get_ht (attn_map, hts)
 
         hs = torch.tanh(self.head_extractor(torch.cat([hs, h_t], dim=1)))
         ts = torch.tanh(self.tail_extractor(torch.cat([ts, h_t], dim=1)))

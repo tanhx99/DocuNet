@@ -5,11 +5,13 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoConfig, AutoModel, AutoTokenizer
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
-from model_balanceloss import DocREModel
+# from model_balanceloss import DocREModel
 # from model_balanceloss3 import DiffusionDocREModel as DocREModel
-from utils_sample import set_seed, collate_fn
-from prepro import read_cdr, read_gda
+from model import DocREModel
+from utils import set_seed, collate_fn
+from prepro import read_cdr, read_gda, read_docred
 import time
+import wandb
 
 
 def train(args, model, train_features, dev_features, test_features):
@@ -45,6 +47,7 @@ def train(args, model, train_features, dev_features, test_features):
                           }
                 outputs = model(**inputs)
                 loss = outputs["loss"] / args.gradient_accumulation_steps
+                wandb.log({"loss": loss.item()}, step=num_steps)
                 loss.backward()
                 total_loss += loss.item()
                 if step % args.gradient_accumulation_steps == 0:
@@ -69,8 +72,8 @@ def train(args, model, train_features, dev_features, test_features):
                     eval_start_time = time.time()
                     dev_score, dev_output = evaluate(args, model, dev_features, tag="dev")
                     test_score, test_output = evaluate(args, model, test_features, tag="test")
-                    #print(dev_output)
-                    #print(test_output)
+                    wandb.log(dev_output, step=num_steps)
+                    wandb.log(test_output, step=num_steps)
                     logging(
                         '| epoch {:3d} | time: {:5.2f}s | dev_output:{} | test_output:{}'.format(epoch, time.time() - eval_start_time,
                                                                                 dev_output, test_output))
@@ -200,13 +203,9 @@ def main():
                         help="The initial learning rate for Adam.")
     parser.add_argument("--max_height", type=int, default=42,
                         help="log.")
-    parser.add_argument("--num_timesteps", type=int, default=1000,
-                        help="log.")
-    parser.add_argument("--sampling_timesteps", type=int, default=5,
-                        help="log.")
     
     args = parser.parse_args()
-    # wandb.init(project="CDR")
+    wandb.init(project="DocuNet-modefied", name="cdr" if "cdr" in args.data_dir else "gda")
     print(args)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     args.n_gpu = torch.cuda.device_count()
@@ -221,6 +220,7 @@ def main():
     )
 
     read = read_cdr if "cdr" in args.data_dir else read_gda
+    # read = read_docred
 
     train_file = os.path.join(args.data_dir, args.train_file)
     dev_file = os.path.join(args.data_dir, args.dev_file)
