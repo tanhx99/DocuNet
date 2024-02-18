@@ -205,7 +205,7 @@ def main():
                         help="log.")
     
     args = parser.parse_args()
-    wandb.init(project="DocuNet-modefied", name="cdr" if "cdr" in args.data_dir else "gda")
+    wandb.init(project="DocuNet-modefied", name="cdr" if "cdr" in args.data_dir else "gda", mode="disabled")
     print(args)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     args.n_gpu = torch.cuda.device_count()

@@ -332,6 +332,7 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
         features = []
         maxlen = 0
         entity_num_max = 0
+        length_over_1024 = 0
         with open(file_in, 'r') as infile:
             lines = infile.readlines()
             for i_l, line in enumerate(tqdm(lines)):
@@ -427,6 +428,9 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
                     entity_num_max = max(len(ent2idx), entity_num_max)
 
                 maxlen = max(maxlen, len(sents))
+                if len(sents) > 1024-2: 
+                    length_over_1024 += 1
+                    continue
                 sents = sents[:max_seq_length - 2]
                 input_ids = tokenizer.convert_tokens_to_ids(sents)
                 input_ids = tokenizer.build_inputs_with_special_tokens(input_ids)
@@ -441,6 +445,7 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
                     features.append(feature)
         print("Number of documents: {}.".format(len(features)))
         print("Max document length: {}.".format(maxlen))
+        print("Number of instance's length over 1024: {}.".format(length_over_1024))
         print("Max entity num: {}".format(entity_num_max))
 
         with open(file=save_file, mode='wb') as fw:

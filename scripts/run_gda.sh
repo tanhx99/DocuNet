@@ -1,11 +1,11 @@
 #! /bin/bash
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0
 
 type=context-based
 bs=8
 bl=2e-5
-ul=8e-5
-accum=4
+ul=1e-4
+accum=1
 epoch=15
 
 python -u  ./train_bio.py --data_dir ./dataset/gda/original \
