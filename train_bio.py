@@ -225,9 +225,9 @@ def main():
     train_file = os.path.join(args.data_dir, args.train_file)
     dev_file = os.path.join(args.data_dir, args.dev_file)
     test_file = os.path.join(args.data_dir, args.test_file)
-    train_features = read(train_file, os.path.join(args.data_dir, 'train_cache'), tokenizer, max_seq_length=args.max_seq_length)
-    dev_features = read(dev_file,os.path.join(args.data_dir, 'dev_cache'), tokenizer, max_seq_length=args.max_seq_length)
-    test_features = read(test_file,os.path.join(args.data_dir, 'test_cache'), tokenizer, max_seq_length=args.max_seq_length)
+    train_features = read(train_file, os.path.join(args.data_dir, '{}_cache'.format(args.train_file[:-5])), tokenizer, max_seq_length=args.max_seq_length)
+    dev_features = read(dev_file,os.path.join(args.data_dir, '{}_cache'.format(args.dev_file[:-5])), tokenizer, max_seq_length=args.max_seq_length)
+    test_features = read(test_file,os.path.join(args.data_dir, '{}_cache'.format(args.test_file[:-5])), tokenizer, max_seq_length=args.max_seq_length)
 
     model = AutoModel.from_pretrained(
         args.model_name_or_path,

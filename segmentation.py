@@ -2,7 +2,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 from torch.nn import Softmax
-from inplace_abn import InPlaceABNSync
 
 def INF(B,H,W):
      return -torch.diag(torch.tensor(float("inf")).cuda().repeat(H),0).unsqueeze(0).repeat(B*W,1,1)
@@ -43,33 +42,6 @@ class CrissCrossAttention(nn.Module):
         out_W = torch.bmm(proj_value_W, att_W.permute(0, 2, 1)).view(m_batchsize,height,-1,width).permute(0,2,1,3)
         #print(out_H.size(),out_W.size())
         return self.gamma*(out_H + out_W) + x
-
-
-class RCCAModule(nn.Module):
-    def __init__(self, in_channels, out_channels, num_classes):
-        super(RCCAModule, self).__init__()
-        inter_channels = in_channels // 4
-        self.conva = nn.Sequential(nn.Conv2d(in_channels, inter_channels, 3, padding=1, bias=False),
-                                   InPlaceABNSync(inter_channels))
-        self.cca = CrissCrossAttention(inter_channels)
-        self.convb = nn.Sequential(nn.Conv2d(inter_channels, inter_channels, 3, padding=1, bias=False),
-                                   InPlaceABNSync(inter_channels))
-
-        self.bottleneck = nn.Sequential(
-            nn.Conv2d(in_channels+inter_channels, out_channels, kernel_size=3, padding=1, dilation=1, bias=False),
-            InPlaceABNSync(out_channels),
-            nn.Dropout2d(0.1),
-            nn.Conv2d(out_channels, num_classes, kernel_size=1, stride=1, padding=0, bias=True)
-            )
-
-    def forward(self, x, recurrence=2):
-        output = self.conva(x)
-        for i in range(recurrence):
-            output = self.cca(output)
-        output = self.convb(output)
-
-        output = self.bottleneck(torch.cat([x, output], 1))
-        return output
 
 
 

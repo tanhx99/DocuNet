@@ -14,8 +14,8 @@ python -u  ./train_bio.py --data_dir ./dataset/gda/original \
   --bert_lr $bl \
   --transformer_type bert \
   --model_name_or_path ../../PLMs/scibert_scivocab_cased \
-  --train_file train.data \
-  --dev_file dev.data \
+  --train_file train+dev.data \
+  --dev_file test.data \
   --test_file test.data \
   --train_batch_size $bs \
   --test_batch_size $bs \
