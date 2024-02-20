@@ -36,13 +36,13 @@ class DocREModel(nn.Module):
         self.head_extractor = nn.Linear(1 * config.hidden_size+self.featureDim, config.hidden_size)
         self.tail_extractor = nn.Linear(1 * config.hidden_size+self.featureDim, config.hidden_size)
 
-        self.bilinear = nn.Bilinear(in1_features=self.featureDim, in2_features=self.featureDim, out_features=config.num_labels)
-        self.classifier = nn.Parameter(torch.randn(config.num_labels, config.hidden_size, config.hidden_size))
-        self.classifier_bais = nn.Parameter(torch.randn(config.num_labels))
+        # self.bilinear = nn.Bilinear(in1_features=self.featureDim, in2_features=self.featureDim, out_features=config.num_labels)
+        self.bilinear = nn.Parameter(torch.randn(config.num_labels, config.hidden_size, config.hidden_size))
+        self.bilinear_bais = nn.Parameter(torch.randn(config.num_labels))
 
         self.segmentation_net = SegNet(3, self.featureDim)
-        nn.init.uniform_(self.classifier,a=-math.sqrt(1/(2*self.reduced_dim)), b=math.sqrt(1/(2*self.reduced_dim)))
-        nn.init.uniform_(self.classifier_bais, a=-math.sqrt(1 / (2*self.reduced_dim)), b=math.sqrt(1 / (2*self.reduced_dim)))
+        nn.init.uniform_(self.bilinear,a=-math.sqrt(1/(2*self.reduced_dim)), b=math.sqrt(1/(2*self.reduced_dim)))
+        nn.init.uniform_(self.bilinear_bais, a=-math.sqrt(1 / (2*self.reduced_dim)), b=math.sqrt(1 / (2*self.reduced_dim)))
         nn.init.xavier_normal_(self.attention_net)
 
 
@@ -211,7 +211,7 @@ class DocREModel(nn.Module):
         ts = torch.tanh(self.tail_extractor(torch.cat([ts, h_t], dim=-1)))
 
         # logits = self.bilinear(hs, ts)
-        logits = torch.einsum("nkd,kdp,nkp->nk", [hs, self.classifier, ts]) + self.classifier_bais
+        logits = torch.einsum("nkd,kdp,nkp->nk", [hs, self.bilinear, ts]) + self.bilinear_bais
 
         output = dict()
         pred = (self.loss_fnt.get_label(logits, num_labels=self.pos_label_num))
