@@ -2,7 +2,7 @@ import torch, math
 import torch.nn as nn
 from opt_einsum import contract
 from allennlp.modules.matrix_attention import DotProductMatrixAttention, CosineMatrixAttention, BilinearMatrixAttention
-from losses import ATLoss, balanced_loss
+from losses import ATLoss, balanced_loss, NCRLoss
 from long_seq import process_long_input
 from segmentation import AttentionUNet as SegNet
 
@@ -14,7 +14,8 @@ class DocREModel(nn.Module):
         self.config = config
         self.bert_model = model
         self.hidden_size = config.hidden_size
-        self.loss_fnt = balanced_loss()
+        # self.loss_fnt = balanced_loss()
+        self.loss_fnt = NCRLoss()
 
         self.featureDim = 256
         self.relation_dim = 256
