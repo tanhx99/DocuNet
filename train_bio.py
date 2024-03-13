@@ -127,7 +127,7 @@ def evaluate(args, model, features, tag="dev"):
             preds.append(pred)
             golds.append(np.concatenate([np.array(label, np.float32) for label in batch[2]], axis=0))
          
-
+    output = dict()
     preds = np.concatenate(preds, axis=0).astype(np.float32)
     golds = np.concatenate(golds, axis=0).astype(np.float32)
     tp = ((preds[:, 1] == 1) & (golds[:, 1] == 1)).astype(np.float32).sum()
@@ -136,11 +136,31 @@ def evaluate(args, model, features, tag="dev"):
     precision = tp / (tp + fp + 1e-5)
     recall = tp / (tp + tn + 1e-5)
     f1 = 2 * precision * recall / (precision + recall + 1e-5)
-    output = {
-        tag + "_F1": f1 * 100,
-        tag + "_P": precision * 100,
-        tag + "_R": recall * 100
-    }
+    output[tag + "_overall-F1"] = f1 * 100
+    output[tag + "_overall-P"] = precision * 100
+    output[tag + "_overall-R"] = recall * 100
+
+    tp = ((golds[:, 2] == 0) & (preds[:, 1] == 1) & (golds[:, 1] == 1)).astype(np.float32).sum()
+    tn = ((golds[:, 2] == 0) & (golds[:, 1] == 1) & (preds[:, 1] != 1)).astype(np.float32).sum()
+    fp = ((golds[:, 2] == 0) & (preds[:, 1] == 1) & (golds[:, 1] != 1)).astype(np.float32).sum()
+    precision = tp / (tp + fp + 1e-5)
+    recall = tp / (tp + tn + 1e-5)
+    f1 = 2 * precision * recall / (precision + recall + 1e-5)
+    output[tag + "_intra-F1"] = f1 * 100
+    output[tag + "_intra-P"] = precision * 100
+    output[tag + "_intra-R"] = recall * 100
+
+    tp = ((golds[:, 2] == 1) & (preds[:, 1] == 1) & (golds[:, 1] == 1)).astype(np.float32).sum()
+    tn = ((golds[:, 2] == 1) & (golds[:, 1] == 1) & (preds[:, 1] != 1)).astype(np.float32).sum()
+    fp = ((golds[:, 2] == 1) & (preds[:, 1] == 1) & (golds[:, 1] != 1)).astype(np.float32).sum()
+    precision = tp / (tp + fp + 1e-5)
+    recall = tp / (tp + tn + 1e-5)
+    f1 = 2 * precision * recall / (precision + recall + 1e-5)
+    output[tag + "_inter-F1"] = f1 * 100
+    output[tag + "_inter-P"] = precision * 100
+    output[tag + "_inter-R"] = recall * 100
+
+
     return f1, output
 
 
@@ -247,7 +267,7 @@ def main():
         train(args, model, train_features, dev_features, test_features)
     else:
         # model = amp.initialize(model, opt_level="O1", verbosity=0)
-        model.load_state_dict(torch.load(args.load_path))
+        model.load_state_dict(torch.load(args.load_path)['checkpoint'])
         dev_score, dev_output = evaluate(args, model, dev_features, tag="dev")
         test_score, test_output = evaluate(args, model, test_features, tag="test")
         print(dev_output)

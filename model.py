@@ -162,9 +162,9 @@ class DocREModel(nn.Module):
             entity_atts = entity_as[b]
             h_att = torch.index_select(entity_atts, 0, index_pair[:, 0])
             t_att = torch.index_select(entity_atts, 0, index_pair[:, 1])
-            ht_att = (h_att * t_att).mean(1)
+            ht_att = (h_att * t_att).mean(1)    # size(ne*ne, length)
             ht_att = ht_att / (ht_att.sum(1, keepdim=True) + 1e-5)
-            rs = contract("ld,rl->rd", sequence_output[b], ht_att)
+            rs = contract("ld,rl->rd", sequence_output[b], ht_att)  # size(ne*ne, d)
             map_rss.append(rs)
         map_rss = torch.cat(map_rss, dim=0).reshape(bs, ne, ne, d)
         return map_rss

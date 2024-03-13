@@ -394,6 +394,7 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
                             t_start, h_start = p[8], p[14]
                             t_end, h_end = p[9], p[15]
                             t_sent, h_sent = p[10], p[16]
+                        is_cross = 1 if p[2] == "CROSS" else 0
                         h_start = map(int, h_start.split(':'))
                         h_end = map(int, h_end.split(':'))
                         t_start = map(int, t_start.split(':'))
@@ -414,15 +415,16 @@ def read_gda(file_in, save_file, tokenizer, max_seq_length=1024):
 
                         r = gda_rel2id[p[0]]
                         if (h_id, t_id) not in train_triples:
-                            train_triples[(h_id, t_id)] = [{'relation': r}]
+                            train_triples[(h_id, t_id)] = [{'relation': r, "is_cross": is_cross}]
                         else:
-                            train_triples[(h_id, t_id)].append({'relation': r})
+                            train_triples[(h_id, t_id)].append({'relation': r, "is_cross": is_cross})
 
                     relations, hts = [], []
                     for h, t in train_triples.keys():
-                        relation = [0] * len(gda_rel2id)
+                        relation = [0] * (len(gda_rel2id) + 1)
                         for mention in train_triples[h, t]:
                             relation[mention["relation"]] = 1
+                            relation[-1] = mention["is_cross"]
                         relations.append(relation)
                         hts.append([h, t])
                     entity_num_max = max(len(ent2idx), entity_num_max)
